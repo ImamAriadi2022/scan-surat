@@ -1,0 +1,12 @@
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nama VARCHAR(100) NOT NULL,
+    nim VARCHAR(20) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    fakultas VARCHAR(100) NOT NULL,
+    jurusan VARCHAR(100) NOT NULL,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('admin', 'mahasiswa') NOT NULL DEFAULT 'mahasiswa',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
