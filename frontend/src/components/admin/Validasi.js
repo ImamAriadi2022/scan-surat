@@ -1,52 +1,122 @@
-import React, { useState } from 'react';
-import { Container, Row, Col, Table, Button, Modal, Card, Form } from 'react-bootstrap';
-import { FaFilePdf } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { Container, Table, Button, Modal, Form, Alert } from 'react-bootstrap';
 
 function Validasi() {
+  const [mahasiswaList, setMahasiswaList] = useState([]); // Daftar berkas mahasiswa
   const [selectedMahasiswa, setSelectedMahasiswa] = useState(null); // Mahasiswa yang dipilih
   const [showModal, setShowModal] = useState(false); // Kontrol modal
-  const [actionStatus, setActionStatus] = useState(''); // Status aksi (verifikasi/penolakan)
+  const [catatan, setCatatan] = useState(''); // Catatan validasi
+  const [error, setError] = useState(null); // Pesan error
+  const [success, setSuccess] = useState(null); // Pesan sukses
 
-  // Simulasi data mahasiswa
-  const mahasiswaList = [
-    { id: 1, nama: 'John Doe', nim: '12345678', status: 'Belum Diverifikasi' },
-    { id: 2, nama: 'Jane Smith', nim: '87654321', status: 'Belum Diverifikasi' },
-  ];
+  // Ambil data berkas dari backend
+  useEffect(() => {
+    const fetchBerkas = async () => {
+      try {
+        const response = await fetch('http://localhost/scan-surat/backend/api/validasi.php');
+        const result = await response.json();
+
+        if (response.ok) {
+          setMahasiswaList(result);
+        } else {
+          setError(result.error || 'Gagal mengambil data berkas.');
+        }
+      } catch (err) {
+        setError('Gagal terhubung ke server.');
+      }
+    };
+
+    fetchBerkas();
+  }, []);
 
   // Fungsi untuk membuka modal detail
   const handleShowDetail = (mahasiswa) => {
     setSelectedMahasiswa(mahasiswa);
     setShowModal(true);
+    setCatatan('');
+    setError(null);
+    setSuccess(null);
   };
 
   // Fungsi untuk menutup modal
   const handleCloseModal = () => {
     setSelectedMahasiswa(null);
     setShowModal(false);
-    setActionStatus('');
+    setCatatan('');
   };
 
   // Fungsi untuk memverifikasi berkas
-  const handleVerify = () => {
-    setActionStatus('Terverifikasi');
-    setTimeout(() => {
-      alert(`Berkas mahasiswa ${selectedMahasiswa.nama} telah diverifikasi.`);
-      handleCloseModal();
-    }, 500);
+  const handleVerify = async () => {
+    try {
+      const response = await fetch('http://localhost/scan-surat/backend/api/validasi.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          berkas_id: selectedMahasiswa.id,
+          status: 'Terverifikasi',
+          catatan,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setSuccess(`Berkas mahasiswa ${selectedMahasiswa.nama} telah diverifikasi.`);
+        setMahasiswaList((prevList) =>
+          prevList.map((item) =>
+            item.id === selectedMahasiswa.id ? { ...item, status: 'Terverifikasi' } : item
+          )
+        );
+        setTimeout(handleCloseModal, 2000); // Tutup modal setelah 2 detik
+      } else {
+        setError(result.error || 'Gagal memverifikasi berkas.');
+      }
+    } catch (err) {
+      setError('Gagal terhubung ke server.');
+    }
   };
 
   // Fungsi untuk menolak verifikasi
-  const handleReject = () => {
-    setActionStatus('Ditolak');
-    setTimeout(() => {
-      alert(`Berkas mahasiswa ${selectedMahasiswa.nama} telah ditolak.`);
-      handleCloseModal();
-    }, 500);
+  const handleReject = async () => {
+    try {
+      const response = await fetch('http://localhost/scan-surat/backend/api/validasi.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          berkas_id: selectedMahasiswa.id,
+          status: 'Ditolak',
+          catatan,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setSuccess(`Berkas mahasiswa ${selectedMahasiswa.nama} telah ditolak.`);
+        setMahasiswaList((prevList) =>
+          prevList.map((item) =>
+            item.id === selectedMahasiswa.id ? { ...item, status: 'Ditolak' } : item
+          )
+        );
+        setTimeout(handleCloseModal, 2000); // Tutup modal setelah 2 detik
+      } else {
+        setError(result.error || 'Gagal menolak berkas.');
+      }
+    } catch (err) {
+      setError('Gagal terhubung ke server.');
+    }
   };
 
   return (
     <Container className="py-5">
       <h2 className="text-center mb-4">Halaman Validasi Berkas</h2>
+
+      {error && <Alert variant="danger">{error}</Alert>}
+      {success && <Alert variant="success">{success}</Alert>}
 
       {/* Tabel Daftar Mahasiswa */}
       <Table striped bordered hover>
@@ -54,7 +124,7 @@ function Validasi() {
           <tr>
             <th>#</th>
             <th>Nama</th>
-            <th>NIM</th>
+            <th>Username</th>
             <th>Status</th>
             <th>Aksi</th>
           </tr>
@@ -64,7 +134,7 @@ function Validasi() {
             <tr key={mahasiswa.id}>
               <td>{index + 1}</td>
               <td>{mahasiswa.nama}</td>
-              <td>{mahasiswa.nim}</td>
+              <td>{mahasiswa.username}</td>
               <td>{mahasiswa.status}</td>
               <td>
                 <Button
@@ -88,98 +158,40 @@ function Validasi() {
           {selectedMahasiswa && (
             <>
               <h5>Nama: {selectedMahasiswa.nama}</h5>
-              <h6>NIM: {selectedMahasiswa.nim}</h6>
+              <h6>Username: {selectedMahasiswa.username}</h6>
               <p>Status: <strong>{selectedMahasiswa.status}</strong></p>
 
-              {/* Daftar Berkas */}
-              <Row className="g-4">
-                {/* Berkas 1 */}
-                <Col md={6}>
-                  <Card className="shadow-sm">
-                    <Card.Body>
-                      <Card.Title className="text-center">
-                        <FaFilePdf className="me-2 text-danger" />
-                        Berkas 1
-                      </Card.Title>
-                      <Card.Text>
-                        Deskripsi berkas 1: Contoh file PDF yang diunggah oleh pengguna.
-                      </Card.Text>
-                      <Button variant="primary" className="w-100">
-                        Lihat Berkas
-                      </Button>
-                    </Card.Body>
-                  </Card>
-                </Col>
-
-                {/* Berkas 2 */}
-                <Col md={6}>
-                  <Card className="shadow-sm">
-                    <Card.Body>
-                      <Card.Title className="text-center">
-                        <FaFilePdf className="me-2 text-danger" />
-                        Berkas 2
-                      </Card.Title>
-                      <Card.Text>
-                        Deskripsi berkas 2: Contoh file PDF yang diunggah oleh pengguna.
-                      </Card.Text>
-                      <Button variant="primary" className="w-100">
-                        Lihat Berkas
-                      </Button>
-                    </Card.Body>
-                  </Card>
-                </Col>
-
-                {/* Berkas 3 */}
-                <Col md={6}>
-                  <Card className="shadow-sm">
-                    <Card.Body>
-                      <Card.Title className="text-center">
-                        <FaFilePdf className="me-2 text-danger" />
-                        Berkas 3
-                      </Card.Title>
-                      <Card.Text>
-                        Deskripsi berkas 3: Contoh file PDF yang diunggah oleh pengguna.
-                      </Card.Text>
-                      <Button variant="primary" className="w-100">
-                        Lihat Berkas
-                      </Button>
-                    </Card.Body>
-                  </Card>
-                </Col>
-
-                {/* Surat Keterangan Masih Kuliah */}
-                <Col md={6}>
-                  <Card className="shadow-sm">
-                    <Card.Body>
-                      <Card.Title className="text-center">
-                        <FaFilePdf className="me-2 text-danger" />
-                        Surat Keterangan Masih Kuliah
-                      </Card.Title>
-                      <Card.Text>
-                        Surat keterangan ini akan diverifikasi setelah semua berkas sebelumnya direview.
-                      </Card.Text>
-                      <Button variant="primary" className="w-100">
-                        Lihat Surat
-                      </Button>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              </Row>
+               {/* Review PDF */}
+              {/* Review PDF */}
+                <div className="mb-3">
+                <h6>Preview Berkas:</h6>
+                <iframe
+                    src={`http://localhost/scan-surat/backend/uploads/${selectedMahasiswa.nama_berkas}`}
+                    title="Preview Berkas"
+                    width="100%"
+                    height="500px"
+                    style={{ border: '1px solid #ccc' }}
+                ></iframe>
+                </div>
 
               {/* Aksi Verifikasi */}
-              <div className="mt-4">
-                <Form.Group className="mb-3">
-                  <Form.Label>Catatan (Opsional)</Form.Label>
-                  <Form.Control as="textarea" rows={3} placeholder="Tambahkan catatan jika diperlukan..." />
-                </Form.Group>
-                <div className="d-flex justify-content-between">
-                  <Button variant="danger" onClick={handleReject}>
-                    Tolak Verifikasi
-                  </Button>
-                  <Button variant="success" onClick={handleVerify}>
-                    Verifikasi Berkas
-                  </Button>
-                </div>
+              <Form.Group className="mb-3">
+                <Form.Label>Catatan (Opsional)</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  placeholder="Tambahkan catatan jika diperlukan..."
+                  value={catatan}
+                  onChange={(e) => setCatatan(e.target.value)}
+                />
+              </Form.Group>
+              <div className="d-flex justify-content-between">
+                <Button variant="danger" onClick={handleReject}>
+                  Tolak Verifikasi
+                </Button>
+                <Button variant="success" onClick={handleVerify}>
+                  Verifikasi Berkas
+                </Button>
               </div>
             </>
           )}

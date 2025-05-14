@@ -19,12 +19,6 @@ function Sidebar() {
             </Link>
           </li>
           <li className="py-2 px-3">
-            <Link to="/admin/verifikasi" className="text-light text-decoration-none d-flex align-items-center">
-              <FaCheckCircle className="me-2" />
-              Verifikasi
-            </Link>
-          </li>
-          <li className="py-2 px-3">
             <Link to="/admin/validasi" className="text-light text-decoration-none d-flex align-items-center">
               <FaClipboardCheck className="me-2" />
               Validasi

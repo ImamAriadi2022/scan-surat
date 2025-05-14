@@ -33,6 +33,7 @@ function LoginForm() {
       if (response.ok) {
         setSuccess('Login berhasil!');
         // Simpan informasi login ke localStorage
+        localStorage.setItem('user_id', result.user_id); // Simpan user_id
         localStorage.setItem('token', result.token);
         localStorage.setItem('role', result.role);
         localStorage.setItem('username', result.username);

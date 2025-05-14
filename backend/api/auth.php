@@ -69,6 +69,7 @@ function handleRegister($conn, $input) {
     }
 }
 
+
 function handleLogin($conn, $input) {
     if (!isset($input['username'], $input['password'])) {
         http_response_code(400);
@@ -89,8 +90,9 @@ function handleLogin($conn, $input) {
             http_response_code(200);
             echo json_encode([
                 "message" => "Login successful.",
+                "user_id" => $user['id'], // Tambahkan user_id
                 "token" => $token,
-                "role" => $user['role'], // Mengembalikan role pengguna
+                "role" => $user['role'],
                 "username" => $user['username']
             ]);
         } else {
