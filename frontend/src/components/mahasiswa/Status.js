@@ -88,7 +88,7 @@ function Status() {
         <div className="text-center mt-5">
           <h4 className="mb-3">Semua berkas telah diverifikasi!</h4>
           <div ref={qrCodeRef}>
-            <QRCodeCanvas value={`https://example.com/mahasiswa/barcode/${userId}`} size={200} />
+            <QRCodeCanvas value={`http://localhost/scan-surat/backend/api/getBerkasByUser.php?user_id=${userId}`} size={200} />
           </div>
           <p className="mt-3">Scan barcode ini untuk keperluan administrasi.</p>
           <Button variant="primary" onClick={handleDownloadBarcode}>
