@@ -10,3 +10,5 @@ CREATE TABLE users (
     role ENUM('admin', 'mahasiswa') NOT NULL DEFAULT 'mahasiswa',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE users ADD COLUMN foto VARCHAR(255) NULL;

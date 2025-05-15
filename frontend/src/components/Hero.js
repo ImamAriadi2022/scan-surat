@@ -22,7 +22,7 @@ function Hero() {
           {/* Gambar atau Animasi */}
           <Col md={6} className="text-center">
             <img
-              src="/path/to/your/image-or-animation.svg" // Ganti dengan path gambar atau animasi Anda
+              src="/img/hero.png" // Ganti dengan path gambar atau animasi Anda
               alt="Hero Illustration"
               className="img-fluid"
             />

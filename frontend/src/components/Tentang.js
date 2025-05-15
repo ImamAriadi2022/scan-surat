@@ -23,7 +23,7 @@ function Tentang() {
           {/* Gambar atau Ilustrasi */}
           <Col md={6} className="text-center">
             <img
-              src="/path/to/your/image-or-illustration.svg" // Ganti dengan path gambar atau ilustrasi Anda
+              src="/img/about.png" // Ganti dengan path gambar atau ilustrasi Anda
               alt="Tentang Kami Illustration"
               className="img-fluid"
             />

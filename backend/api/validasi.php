@@ -15,9 +15,10 @@ if ($method === 'OPTIONS') {
     exit();
 }
 
+// ...existing code...
 if ($method === 'GET') {
     // Ambil data berkas dari database
-    $sql = "SELECT b.id, b.nama_berkas, u.username, b.status, b.catatan 
+    $sql = "SELECT b.id, b.nama_berkas, u.username, u.nama, b.status, b.catatan 
             FROM berkas b 
             JOIN users u ON b.user_id = u.id";
     $result = $conn->query($sql);
@@ -33,7 +34,10 @@ if ($method === 'GET') {
         http_response_code(404);
         echo json_encode(["error" => "Tidak ada data berkas ditemukan."]);
     }
-} elseif ($method === 'POST') {
+}
+// ...existing code...
+
+elseif ($method === 'POST') {
     $input = json_decode(file_get_contents("php://input"), true);
 
     // Validasi input
