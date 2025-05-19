@@ -1,6 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Table, Button, Modal, Form, Alert, Row, Col } from 'react-bootstrap';
 
+// Mapping nama_berkas ke jenis surat (statis, sesuai fitur)
+const jenisSuratMap = {
+  'Fotokopi Syarat': 'Surat Keterangan Masih Kuliah',
+  'Fotokopi Pemberitahuan Beasiswa': 'Surat Keterangan Tidak Sedang Menerima Beasiswa',
+  'Surat Pengantar Jurusan': 'Surat Keterangan Tidak Sedang Menerima Beasiswa',
+  'Fotokopi Slip UKT Terakhir': 'Surat Keterangan Tidak Sedang Menerima Beasiswa',
+  'Fotokopi Pemberitahuan Beasiswa (Aktif Kuliah)': 'Surat Keterangan Aktif Kuliah',
+  'Proposal Kegiatan (PDF)': 'Proposal Kegiatan',
+  'Fotokopi KTM (PDF)': 'Legalisir KTM',
+  'Form SKPI (PDF)': 'SKPI (Surat Keterangan Pendamping Ijazah)',
+  // Tambahkan mapping lain sesuai kebutuhan
+};
+
+// Fungsi untuk menebak jenis surat dari nama_berkas
+function getJenisSurat(berkas) {
+  // Cek mapping statis
+  if (jenisSuratMap[berkas.nama_berkas]) {
+    return jenisSuratMap[berkas.nama_berkas];
+  }
+  // Fallback: deteksi dari nama_berkas
+  if (berkas.nama_berkas.toLowerCase().includes('masihkuliah')) return 'Surat Keterangan Masih Kuliah';
+  if (berkas.nama_berkas.toLowerCase().includes('tidakbeasiswa')) return 'Surat Keterangan Tidak Sedang Menerima Beasiswa';
+  if (berkas.nama_berkas.toLowerCase().includes('aktifkuliah')) return 'Surat Keterangan Aktif Kuliah';
+  if (berkas.nama_berkas.toLowerCase().includes('rekombeasiswa')) return 'Surat Rekomendasi Beasiswa';
+  if (berkas.nama_berkas.toLowerCase().includes('rekomkompetisi')) return 'Surat Rekomendasi Mengikuti Kompetisi';
+  if (berkas.nama_berkas.toLowerCase().includes('proposal')) return 'Proposal Kegiatan';
+  if (berkas.nama_berkas.toLowerCase().includes('ktm')) return 'Legalisir KTM';
+  if (berkas.nama_berkas.toLowerCase().includes('skpi')) return 'SKPI (Surat Keterangan Pendamping Ijazah)';
+  return 'Lainnya';
+}
+
 function Validasi() {
   const [berkasList, setBerkasList] = useState([]);
   const [mahasiswaList, setMahasiswaList] = useState([]);
@@ -140,35 +171,51 @@ function Validasi() {
 
       {/* Tabel Daftar Mahasiswa */}
       {filteredMahasiswa.length > 0 ? (
-      <Table striped bordered hover>
-        <thead>
-          <tr>
-            <th>No</th>
-            <th>Nama</th>
-            <th>Username</th>
-            <th>Status</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredMahasiswa.map((mhs, idx) => (
-            <tr key={mhs.username}>
-              <td>{idx + 1}</td>
-              <td>{mhs.nama}</td>
-              <td>{mhs.username}</td>
-              <td>{mhs.status}</td>
-              <td>
-                <Button variant="primary" onClick={() => handleShowDetail(mhs.username)}>
-                  Review Berkas
-                </Button>
-              </td>
+        <Table striped bordered hover>
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Nama</th>
+              <th>Username</th>
+              <th>Status</th>
+              <th>Jenis Surat</th>
+              <th>Aksi</th>
             </tr>
-          ))}
-        </tbody>
-      </Table> ) : (
+          </thead>
+          <tbody>
+            {filteredMahasiswa.map((mhs, idx) => {
+              // Ambil jenis surat unik dari semua berkas milik mahasiswa ini
+              const jenisSuratArr = berkasList
+                .filter((b) => b.username === mhs.username)
+                .map((b) => getJenisSurat(b))
+                .filter((v, i, a) => a.indexOf(v) === i); // unik
+
+              return (
+                <tr key={mhs.username}>
+                  <td>{idx + 1}</td>
+                  <td>{mhs.nama}</td>
+                  <td>{mhs.username}</td>
+                  <td>{mhs.status}</td>
+                  <td>
+                    <ul className="mb-0 ps-3" style={{ textAlign: "left" }}>
+                      {jenisSuratArr.length > 0
+                        ? jenisSuratArr.map((js, i) => <li key={i}>{js}</li>)
+                        : <span className="text-muted">-</span>}
+                    </ul>
+                  </td>
+                  <td>
+                    <Button variant="primary" onClick={() => handleShowDetail(mhs.username)}>
+                      Review Berkas
+                    </Button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </Table>
+      ) : (
         <p className="text-center">Tidak ada data mahasiswa.</p>
       )}
-
 
       {/* Modal Detail Mahasiswa */}
       <Modal show={showModal} onHide={handleCloseModal} size="lg">
@@ -183,6 +230,7 @@ function Validasi() {
                 .filter((b) => b.username === selectedMahasiswa)
                 .map((berkas) => (
                   <div key={berkas.id} className="mb-4 border-bottom pb-3">
+                    <h6>Jenis Surat: {getJenisSurat(berkas)}</h6>
                     <h6>Nama Berkas: {berkas.nama_berkas}</h6>
                     <p>Status: <strong>{berkas.status}</strong></p>
                     <p>Catatan: {berkas.catatan || '-'}</p>

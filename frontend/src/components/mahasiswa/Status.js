@@ -1,17 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Container, Table, Badge, Button, Alert } from 'react-bootstrap';
 import { FaBarcode } from 'react-icons/fa';
-import { QRCodeCanvas } from 'qrcode.react'; // Gunakan QRCodeCanvas
+import { QRCodeCanvas } from 'qrcode.react';
 
 function Status() {
-  const [berkasStatus, setBerkasStatus] = useState([]); // Status berkas mahasiswa
-  const [error, setError] = useState(null); // Pesan error
-  const qrCodeRef = useRef(); // Referensi untuk elemen QRCodeCanvas
+  const [berkasStatus, setBerkasStatus] = useState([]);
+  const [error, setError] = useState(null);
+  const qrCodeRef = useRef();
 
-  // Ambil user_id dari localStorage
   const userId = localStorage.getItem('user_id');
 
-  // Ambil data status berkas dari backend
   useEffect(() => {
     const fetchStatus = async () => {
       try {
@@ -31,10 +29,8 @@ function Status() {
     fetchStatus();
   }, [userId]);
 
-  // Cek apakah semua berkas sudah terverifikasi
-  const allVerified = berkasStatus.every((berkas) => berkas.status === 'Terverifikasi');
+  const allVerified = berkasStatus.length > 0 && berkasStatus.every((berkas) => berkas.status === 'Terverifikasi');
 
-  // Fungsi untuk mengunduh barcode
   const handleDownloadBarcode = () => {
     const canvas = qrCodeRef.current.querySelector('canvas');
     const url = canvas.toDataURL('image/png');
@@ -83,7 +79,6 @@ function Status() {
         </tbody>
       </Table>
 
-      {/* Tampilkan Barcode jika semua berkas terverifikasi */}
       {allVerified && (
         <div className="text-center mt-5">
           <h4 className="mb-3">Semua berkas telah diverifikasi!</h4>

@@ -1,15 +1,115 @@
 import React, { useState } from 'react';
-import { Container, Form, Button, Row, Col, Alert } from 'react-bootstrap';
+import { Container, Form, Button, Row, Col, Alert, Card } from 'react-bootstrap';
+
+const suratOptions = [
+  {
+    value: 'masihKuliah',
+    label: 'Surat Keterangan Masih Kuliah',
+    syarat: [
+      'Fotokopi KP4 Orang Tua, Taspen, dan BPJS Kesehatan Mahasiswa (Pensiun PNS) atau Fotokopi Surat Keterangan Kerja Orang Tua (bagi swasta) tahun terbaru (1 lembar)',
+    ],
+    fields: [
+      { name: 'berkas1', label: 'Fotokopi Syarat', required: true },
+    ],
+  },
+  {
+    value: 'tidakBeasiswa',
+    label: 'Surat Keterangan Tidak Sedang Menerima Beasiswa',
+    syarat: [
+      'Fotokopi pemberitahuan tentang beasiswa yang ingin diajukan (1 lembar)',
+      'Surat pengantar dari jurusan (1 lembar)',
+      'Fotokopi Slip UKT Terakhir (1 lembar)',
+    ],
+    fields: [
+      { name: 'berkas1', label: 'Fotokopi Pemberitahuan Beasiswa', required: true },
+      { name: 'berkas2', label: 'Surat Pengantar Jurusan', required: true },
+      { name: 'berkas3', label: 'Fotokopi Slip UKT Terakhir', required: true },
+    ],
+  },
+  {
+    value: 'aktifKuliah',
+    label: 'Surat Keterangan Aktif Kuliah',
+    syarat: [
+      'Fotokopi pemberitahuan tentang beasiswa yang ingin diajukan (khusus keperluan beasiswa, 1 lembar)',
+      'Surat pengantar dari jurusan (1 lembar)',
+      'Fotokopi Slip UKT terakhir (1 lembar)',
+    ],
+    fields: [
+      { name: 'berkas1', label: 'Fotokopi Pemberitahuan Beasiswa', required: false },
+      { name: 'berkas2', label: 'Surat Pengantar Jurusan', required: true },
+      { name: 'berkas3', label: 'Fotokopi Slip UKT Terakhir', required: true },
+    ],
+  },
+  {
+    value: 'rekomBeasiswa',
+    label: 'Surat Rekomendasi Beasiswa',
+    syarat: [
+      'Fotokopi pemberitahuan tentang beasiswa yang ingin diajukan (1 lembar)',
+      'Surat pengantar dari jurusan (1 lembar)',
+      'Fotokopi Slip UKT terakhir (1 lembar)',
+    ],
+    fields: [
+      { name: 'berkas1', label: 'Fotokopi Pemberitahuan Beasiswa', required: true },
+      { name: 'berkas2', label: 'Surat Pengantar Jurusan', required: true },
+      { name: 'berkas3', label: 'Fotokopi Slip UKT Terakhir', required: true },
+    ],
+  },
+  {
+    value: 'rekomKompetisi',
+    label: 'Surat Rekomendasi Mengikuti Kompetisi',
+    syarat: [
+      'Surat pengantar dari jurusan (1 lembar)',
+      'Fotokopi Slip UKT Terakhir (1 lembar)',
+    ],
+    fields: [
+      { name: 'berkas1', label: 'Surat Pengantar Jurusan', required: true },
+      { name: 'berkas2', label: 'Fotokopi Slip UKT Terakhir', required: true },
+    ],
+  },
+  {
+    value: 'proposalKegiatan',
+    label: 'Proposal Kegiatan',
+    syarat: [
+      'Proposal kegiatan yang sudah dicetak dan dijilid (1 rangkap untuk arsip di Subbag, KA)',
+    ],
+    fields: [
+      { name: 'berkas1', label: 'Proposal Kegiatan (PDF)', required: true },
+    ],
+  },
+  {
+    value: 'legalisirKTM',
+    label: 'Legalisir KTM',
+    syarat: [
+      'Fotokopi KTM dalam kertas HVS satu lembar utuh, jangan dipotong-potong (1 rangkap untuk arsip di Subbag, KA)',
+    ],
+    fields: [
+      { name: 'berkas1', label: 'Fotokopi KTM (PDF)', required: true },
+    ],
+  },
+  {
+    value: 'skpi',
+    label: 'SKPI (Surat Keterangan Pendamping Ijazah)',
+    syarat: [
+      'Form SKPI yang sudah ditandatangani oleh mahasiswa ybs (2 rangkap)',
+    ],
+    fields: [
+      { name: 'berkas1', label: 'Form SKPI (PDF)', required: true },
+    ],
+  },
+];
 
 function Input() {
-  const [files, setFiles] = useState({
-    berkas1: null,
-    berkas2: null,
-    berkas3: null,
-    suratKeterangan: null,
-  });
+  const [selectedSurat, setSelectedSurat] = useState('');
+  const [files, setFiles] = useState({});
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
+
+  const handleSuratChange = (e) => {
+    setSelectedSurat(e.target.value);
+    setFiles({});
+    setSuccess(null);
+    setError(null);
+  };
 
   const handleFileChange = (e) => {
     const { name, files: uploadedFiles } = e.target;
@@ -24,18 +124,32 @@ function Input() {
     setSuccess(null);
     setError(null);
 
-    // Ambil user_id dari localStorage
     const userId = localStorage.getItem('user_id');
     if (!userId) {
       setError('User ID tidak ditemukan. Silakan login ulang.');
       return;
     }
 
+    if (!selectedSurat) {
+      setError('Silakan pilih jenis surat terlebih dahulu.');
+      return;
+    }
+
+    const surat = suratOptions.find((s) => s.value === selectedSurat);
+    // Validasi file wajib
+    for (const field of surat.fields) {
+      if (field.required && !files[field.name]) {
+        setError(`Berkas "${field.label}" wajib diunggah.`);
+        return;
+      }
+    }
+
     const formData = new FormData();
-    formData.append('user_id', userId); // Tambahkan user_id ke formData
-    Object.keys(files).forEach((key) => {
-      if (files[key]) {
-        formData.append(key, files[key]);
+    formData.append('user_id', userId);
+    formData.append('jenis_surat', selectedSurat);
+    surat.fields.forEach((field) => {
+      if (files[field.name]) {
+        formData.append(field.name, files[field.name]);
       }
     });
 
@@ -46,81 +160,73 @@ function Input() {
       });
 
       const result = await response.json();
-      console.log('Backend Response:', result); // Debugging respons backend
 
       if (response.ok) {
         setSuccess('File berhasil diunggah!');
-        setFiles({
-          berkas1: null,
-          berkas2: null,
-          berkas3: null,
-          suratKeterangan: null,
-        });
+        setFiles({});
+        setSelectedSurat('');
       } else {
         setError(result.error || 'Gagal mengunggah file.');
       }
     } catch (err) {
-      console.error('Fetch Error:', err); // Debugging error fetch
       setError('Gagal terhubung ke server.');
     }
   };
 
+  const surat = suratOptions.find((s) => s.value === selectedSurat);
+
   return (
     <Container className="py-5">
-      <h2 className="text-center mb-4">Unggah Berkas</h2>
+      <h2 className="text-center mb-4 fw-bold">Unggah Berkas Layanan</h2>
+      <p className="text-center text-muted mb-4" style={{ maxWidth: 700, margin: "0 auto" }}>
+        Pilih jenis layanan surat yang Anda butuhkan, kemudian lengkapi dan unggah seluruh persyaratan sesuai petunjuk. Pastikan seluruh dokumen dalam format PDF dan sesuai ketentuan agar proses administrasi berjalan lancar.
+      </p>
       {success && <Alert variant="success">{success}</Alert>}
       {error && <Alert variant="danger">{error}</Alert>}
       <Form onSubmit={handleSubmit}>
-        <Row className="mb-3">
-          <Col md={6}>
-            <Form.Group controlId="berkas1">
-              <Form.Label>Berkas 1</Form.Label>
-              <Form.Control
-                type="file"
-                name="berkas1"
-                accept="application/pdf"
-                onChange={handleFileChange}
-              />
+        <Card className="mb-4 shadow-sm">
+          <Card.Body>
+            <Form.Group controlId="jenisSurat" className="mb-3">
+              <Form.Label className="fw-semibold">Pilih Jenis Surat</Form.Label>
+              <Form.Select value={selectedSurat} onChange={handleSuratChange} required>
+                <option value="">-- Pilih Surat --</option>
+                {suratOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </Form.Select>
             </Form.Group>
-          </Col>
-          <Col md={6}>
-            <Form.Group controlId="berkas2">
-              <Form.Label>Berkas 2</Form.Label>
-              <Form.Control
-                type="file"
-                name="berkas2"
-                accept="application/pdf"
-                onChange={handleFileChange}
-              />
-            </Form.Group>
-          </Col>
-        </Row>
-        <Row className="mb-3">
-          <Col md={6}>
-            <Form.Group controlId="berkas3">
-              <Form.Label>Berkas 3</Form.Label>
-              <Form.Control
-                type="file"
-                name="berkas3"
-                accept="application/pdf"
-                onChange={handleFileChange}
-              />
-            </Form.Group>
-          </Col>
-          <Col md={6}>
-            <Form.Group controlId="suratKeterangan">
-              <Form.Label>Surat Keterangan Masih Kuliah</Form.Label>
-              <Form.Control
-                type="file"
-                name="suratKeterangan"
-                accept="application/pdf"
-                onChange={handleFileChange}
-              />
-            </Form.Group>
-          </Col>
-        </Row>
+          {surat && (
+                          <>
+                            <div className="mb-3">
+                              <strong>Persyaratan:</strong>
+                              <ul className="mb-2 text-start" style={{ textAlign: "left" }}>
+                                {surat.syarat.map((syarat, idx) => (
+                                  <li key={idx}>{syarat}</li>
+                                ))}
+                              </ul>
+                            </div>
+                            <Row>
+                              {surat.fields.map((field) => (
+                                <Col md={6} key={field.name} className="mb-3">
+                                  <Form.Group controlId={field.name}>
+                                    <Form.Label>{field.label} {field.required && <span className="text-danger">*</span>}</Form.Label>
+                                    <Form.Control
+                                      type="file"
+                                      name={field.name}
+                                      accept="application/pdf"
+                                      onChange={handleFileChange}
+                                      required={field.required}
+                                    />
+                                  </Form.Group>
+                                </Col>
+                              ))}
+                            </Row>
+                          </>
+           )}
+          </Card.Body>
+        </Card>
         <div className="text-center">
-          <Button variant="primary" type="submit">
+          <Button variant="primary" type="submit" disabled={!selectedSurat}>
             Unggah Berkas
           </Button>
         </div>
