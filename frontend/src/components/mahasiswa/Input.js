@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Form, Button, Row, Col, Alert, Card } from 'react-bootstrap';
 
 const suratOptions = [
@@ -103,6 +103,23 @@ function Input() {
   const [files, setFiles] = useState({});
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
+  const [hasOldBerkas, setHasOldBerkas] = useState(false);
+
+  useEffect(() => {
+    // Cek apakah user sudah pernah upload berkas sebelumnya
+    const userId = localStorage.getItem('user_id');
+    if (!userId) return;
+    fetch(`http://localhost/scan-surat/backend/api/action.php?action=getStatus&user_id=${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setHasOldBerkas(true);
+        } else {
+          setHasOldBerkas(false);
+        }
+      })
+      .catch(() => setHasOldBerkas(false));
+  }, []);
 
   const handleSuratChange = (e) => {
     setSelectedSurat(e.target.value);
@@ -165,6 +182,7 @@ function Input() {
         setSuccess('File berhasil diunggah!');
         setFiles({});
         setSelectedSurat('');
+        setHasOldBerkas(true);
       } else {
         setError(result.error || 'Gagal mengunggah file.');
       }
@@ -178,6 +196,11 @@ function Input() {
   return (
     <Container className="py-5">
       <h2 className="text-center mb-4 fw-bold">Unggah Berkas Layanan</h2>
+      {hasOldBerkas && (
+        <Alert variant="warning" className="text-center">
+          <strong>Catatan:</strong> Jika Anda menginputkan berkas baru, maka <u>seluruh berkas lama</u> (baik yang sudah di-ACC maupun yang ditolak) akan <b>dihapus dari database</b>.
+        </Alert>
+      )}
       <p className="text-center text-muted mb-4" style={{ maxWidth: 700, margin: "0 auto" }}>
         Pilih jenis layanan surat yang Anda butuhkan, kemudian lengkapi dan unggah seluruh persyaratan sesuai petunjuk. Pastikan seluruh dokumen dalam format PDF dan sesuai ketentuan agar proses administrasi berjalan lancar.
       </p>
@@ -195,34 +218,34 @@ function Input() {
                 ))}
               </Form.Select>
             </Form.Group>
-          {surat && (
-                          <>
-                            <div className="mb-3">
-                              <strong>Persyaratan:</strong>
-                              <ul className="mb-2 text-start" style={{ textAlign: "left" }}>
-                                {surat.syarat.map((syarat, idx) => (
-                                  <li key={idx}>{syarat}</li>
-                                ))}
-                              </ul>
-                            </div>
-                            <Row>
-                              {surat.fields.map((field) => (
-                                <Col md={6} key={field.name} className="mb-3">
-                                  <Form.Group controlId={field.name}>
-                                    <Form.Label>{field.label} {field.required && <span className="text-danger">*</span>}</Form.Label>
-                                    <Form.Control
-                                      type="file"
-                                      name={field.name}
-                                      accept="application/pdf"
-                                      onChange={handleFileChange}
-                                      required={field.required}
-                                    />
-                                  </Form.Group>
-                                </Col>
-                              ))}
-                            </Row>
-                          </>
-           )}
+            {surat && (
+              <>
+                <div className="mb-3">
+                  <strong>Persyaratan:</strong>
+                  <ul className="mb-2 text-start" style={{ textAlign: "left" }}>
+                    {surat.syarat.map((syarat, idx) => (
+                      <li key={idx}>{syarat}</li>
+                    ))}
+                  </ul>
+                </div>
+                <Row>
+                  {surat.fields.map((field) => (
+                    <Col md={6} key={field.name} className="mb-3">
+                      <Form.Group controlId={field.name}selur>
+                        <Form.Label>{field.label} {field.required && <span className="text-danger">*</span>}</Form.Label>
+                        <Form.Control
+                          type="file"
+                          name={field.name}
+                          accept="application/pdf"
+                          onChange={handleFileChange}
+                          required={field.required}
+                        />
+                      </Form.Group>
+                    </Col>
+                  ))}
+                </Row>
+              </>
+            )}
           </Card.Body>
         </Card>
         <div className="text-center">

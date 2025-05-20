@@ -202,7 +202,8 @@ function handleGetStatus($conn) {
 
     $user_id = $conn->real_escape_string($_GET['user_id']);
 
-    $sql = "SELECT id, nama_berkas, status, catatan FROM berkas WHERE user_id = '$user_id'";
+    // Contoh di action.php
+    $sql = "SELECT id, nama_berkas, status, catatan, jenis_surat FROM berkas WHERE user_id = '$user_id'";
     $result = $conn->query($sql);
 
     if ($result->num_rows > 0) {

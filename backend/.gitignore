@@ -5,3 +5,5 @@ libs/
 uploads/
 ./uploads
 /uploads
+
+/api/libs

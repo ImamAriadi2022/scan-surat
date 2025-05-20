@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Table, Button, Modal, Form, Alert, Row, Col } from 'react-bootstrap';
 
-// Mapping nama_berkas ke jenis surat (statis, sesuai fitur)
+// Fungsi fallback jika field jenis_surat kosong (untuk kompatibilitas lama)
 const jenisSuratMap = {
   'Fotokopi Syarat': 'Surat Keterangan Masih Kuliah',
   'Fotokopi Pemberitahuan Beasiswa': 'Surat Keterangan Tidak Sedang Menerima Beasiswa',
@@ -11,24 +11,11 @@ const jenisSuratMap = {
   'Proposal Kegiatan (PDF)': 'Proposal Kegiatan',
   'Fotokopi KTM (PDF)': 'Legalisir KTM',
   'Form SKPI (PDF)': 'SKPI (Surat Keterangan Pendamping Ijazah)',
-  // Tambahkan mapping lain sesuai kebutuhan
 };
 
-// Fungsi untuk menebak jenis surat dari nama_berkas
 function getJenisSurat(berkas) {
-  // Cek mapping statis
-  if (jenisSuratMap[berkas.nama_berkas]) {
-    return jenisSuratMap[berkas.nama_berkas];
-  }
-  // Fallback: deteksi dari nama_berkas
-  if (berkas.nama_berkas.toLowerCase().includes('masihkuliah')) return 'Surat Keterangan Masih Kuliah';
-  if (berkas.nama_berkas.toLowerCase().includes('tidakbeasiswa')) return 'Surat Keterangan Tidak Sedang Menerima Beasiswa';
-  if (berkas.nama_berkas.toLowerCase().includes('aktifkuliah')) return 'Surat Keterangan Aktif Kuliah';
-  if (berkas.nama_berkas.toLowerCase().includes('rekombeasiswa')) return 'Surat Rekomendasi Beasiswa';
-  if (berkas.nama_berkas.toLowerCase().includes('rekomkompetisi')) return 'Surat Rekomendasi Mengikuti Kompetisi';
-  if (berkas.nama_berkas.toLowerCase().includes('proposal')) return 'Proposal Kegiatan';
-  if (berkas.nama_berkas.toLowerCase().includes('ktm')) return 'Legalisir KTM';
-  if (berkas.nama_berkas.toLowerCase().includes('skpi')) return 'SKPI (Surat Keterangan Pendamping Ijazah)';
+  if (berkas.jenis_surat && berkas.jenis_surat !== '') return berkas.jenis_surat;
+  if (jenisSuratMap[berkas.nama_berkas]) return jenisSuratMap[berkas.nama_berkas];
   return 'Lainnya';
 }
 
@@ -108,7 +95,7 @@ function Validasi() {
         setSuccess(`Berkas ${berkas.nama_berkas} telah diverifikasi.`);
         setBerkasList((prev) =>
           prev.map((item) =>
-            item.id === berkas.id ? { ...item, status: 'Terverifikasi' } : item
+            item.id === berkas.id ? { ...item, status: 'Terverifikasi', catatan: catatan[berkas.id] || '' } : item
           )
         );
       } else {
@@ -135,7 +122,7 @@ function Validasi() {
         setSuccess(`Berkas ${berkas.nama_berkas} telah ditolak.`);
         setBerkasList((prev) =>
           prev.map((item) =>
-            item.id === berkas.id ? { ...item, status: 'Ditolak' } : item
+            item.id === berkas.id ? { ...item, status: 'Ditolak', catatan: catatan[berkas.id] || '' } : item
           )
         );
       } else {
@@ -236,7 +223,7 @@ function Validasi() {
                     <p>Catatan: {berkas.catatan || '-'}</p>
                     <div className="mb-2">
                       <iframe
-                        src={`http://localhost/scan-surat/backend/uploads/${berkas.nama_berkas}`}
+                        src={`http://localhost/scan-surat/backend/uploads/${berkas.file_path || berkas.nama_berkas}`}
                         title={`Preview ${berkas.nama_berkas}`}
                         width="100%"
                         height="350px"

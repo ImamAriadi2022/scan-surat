@@ -15,15 +15,14 @@ if ($method === 'OPTIONS') {
     exit();
 }
 
-// ...existing code...
 if ($method === 'GET') {
-    // Ambil data berkas dari database
-    $sql = "SELECT b.id, b.nama_berkas, u.username, u.nama, b.status, b.catatan 
+    // Ambil data berkas dari database, tambahkan jenis_surat
+    $sql = "SELECT b.id, b.nama_berkas, b.jenis_surat, u.username, u.nama, b.status, b.catatan 
             FROM berkas b 
             JOIN users u ON b.user_id = u.id";
     $result = $conn->query($sql);
 
-    if ($result->num_rows > 0) {
+    if ($result && $result->num_rows > 0) {
         $berkas = [];
         while ($row = $result->fetch_assoc()) {
             $berkas[] = $row;
@@ -35,7 +34,6 @@ if ($method === 'GET') {
         echo json_encode(["error" => "Tidak ada data berkas ditemukan."]);
     }
 }
-// ...existing code...
 
 elseif ($method === 'POST') {
     $input = json_decode(file_get_contents("php://input"), true);

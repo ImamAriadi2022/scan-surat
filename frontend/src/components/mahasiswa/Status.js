@@ -29,7 +29,18 @@ function Status() {
     fetchStatus();
   }, [userId]);
 
-  const allVerified = berkasStatus.length > 0 && berkasStatus.every((berkas) => berkas.status === 'Terverifikasi');
+  // Ambil semua jenis surat yang sudah di-ACC (Terverifikasi)
+  const verifiedJenisSurat = [
+    ...new Set(
+      berkasStatus
+        .filter((berkas) => berkas.status === 'Terverifikasi')
+        .map((berkas) => berkas.jenis_surat)
+    ),
+  ].filter(Boolean);
+
+  const allVerified =
+    berkasStatus.length > 0 &&
+    berkasStatus.every((berkas) => berkas.status === 'Terverifikasi');
 
   const handleDownloadBarcode = () => {
     const canvas = qrCodeRef.current.querySelector('canvas');
@@ -51,6 +62,7 @@ function Status() {
           <tr>
             <th>#</th>
             <th>Nama Berkas</th>
+            <th>Jenis Surat</th>
             <th>Status</th>
             <th>Catatan</th>
           </tr>
@@ -60,6 +72,7 @@ function Status() {
             <tr key={berkas.id}>
               <td>{index + 1}</td>
               <td>{berkas.nama_berkas}</td>
+              <td>{berkas.jenis_surat || '-'}</td>
               <td>
                 <Badge
                   bg={
@@ -79,9 +92,25 @@ function Status() {
         </tbody>
       </Table>
 
-      {allVerified && (
+      {verifiedJenisSurat.length > 0 && (
         <div className="text-center mt-5">
-          <h4 className="mb-3">Semua berkas telah diverifikasi!</h4>
+          <h4 className="mb-3">Surat yang telah di-ACC:</h4>
+          <ul style={{ display: 'inline-block', textAlign: 'left' }}>
+            {verifiedJenisSurat.map((jenis, idx) => (
+              <li key={idx}>{jenis}</li>
+            ))}
+          </ul>
+          <div className="my-4">
+            <Button
+              variant="success"
+              href={`http://localhost/scan-surat/backend/api/generateSurat.php?user_id=${userId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mb-3"
+            >
+              Download Surat Resmi (PDF)
+            </Button>
+          </div>
           <div ref={qrCodeRef}>
             <QRCodeCanvas value={`http://localhost/scan-surat/backend/api/getBerkasByUser.php?user_id=${userId}`} size={200} />
           </div>

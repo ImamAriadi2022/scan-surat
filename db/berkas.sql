@@ -6,5 +6,6 @@ CREATE TABLE berkas (
     status ENUM('Belum Diverifikasi', 'Terverifikasi', 'Ditolak') DEFAULT 'Belum Diverifikasi',
     catatan TEXT DEFAULT NULL,
     uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    jenis_surat VARCHAR(50) DEFAULT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
